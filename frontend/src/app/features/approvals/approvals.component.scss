@@ -1,0 +1,21 @@
+.subtitle {
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: -8px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 720px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+}

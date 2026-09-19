@@ -1,0 +1,82 @@
+<h1>Update Connection String</h1>
+<p class="subtitle">
+  Changes to Development/Staging apps apply immediately. Production changes are submitted for manager approval.
+</p>
+
+@if (loadingApps()) {
+  <mat-spinner diameter="36" />
+} @else {
+  <mat-card class="form-card">
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Application</mat-label>
+        <mat-select formControlName="applicationId">
+          @for (app of apps(); track app.id) {
+            <mat-option [value]="app.id">{{ app.name }} ({{ app.environment }})</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.applicationId.hasError('required') && form.controls.applicationId.touched) {
+          <mat-error>Select an application</mat-error>
+        }
+      </mat-form-field>
+
+      @if (isProduction) {
+        <div class="prod-warning">
+          <strong>Production application selected.</strong> This change will require manager approval before it is
+          applied.
+        </div>
+      }
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Connection string type</mat-label>
+        <mat-select formControlName="type">
+          <mat-option value="Custom">Custom</mat-option>
+          <mat-option value="SQLAzure">SQL Azure</mat-option>
+          <mat-option value="PostgreSQL">PostgreSQL</mat-option>
+          <mat-option value="MySql">MySQL</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Key</mat-label>
+        <input matInput formControlName="key" placeholder="e.g. DefaultConnection" />
+        @if (form.controls.key.hasError('required') && form.controls.key.touched) {
+          <mat-error>Key is required</mat-error>
+        }
+        @if (form.controls.key.hasError('pattern') && form.controls.key.touched) {
+          <mat-error>Only letters, numbers, dot, dash and underscore are allowed</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Value</mat-label>
+        <textarea matInput formControlName="value" rows="3" placeholder="Connection string value"></textarea>
+        @if (form.controls.value.hasError('required') && form.controls.value.touched) {
+          <mat-error>Value is required</mat-error>
+        }
+      </mat-form-field>
+
+      @if (isProduction) {
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Reason for change (shown to approver)</mat-label>
+          <textarea matInput formControlName="reason" rows="2"></textarea>
+        </mat-form-field>
+      }
+
+      <div class="actions">
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
+          @if (saving()) {
+            <mat-spinner diameter="18" class="btn-spinner" />
+          }
+          Save
+        </button>
+      </div>
+    </form>
+  </mat-card>
+
+  @if (result()) {
+    <mat-card class="result-card" [class.pending]="result()!.requiresApproval">
+      <p>{{ result()!.message }}</p>
+    </mat-card>
+  }
+}

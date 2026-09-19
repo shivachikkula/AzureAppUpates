@@ -1,0 +1,56 @@
+<div class="tab-body">
+  <p class="hint">Grant a developer access to update connection strings on one application.</p>
+  <form class="inline-form" [formGroup]="form" (ngSubmit)="create()">
+    <mat-form-field appearance="outline">
+      <mat-label>Application</mat-label>
+      <mat-select formControlName="applicationId">
+        @for (app of apps(); track app.id) {
+          <mat-option [value]="app.id">{{ app.name }} ({{ app.environment }})</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Developer's Entra object ID</mat-label>
+      <input matInput formControlName="userObjectId" placeholder="Entra ID oid" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="userEmail" placeholder="dev@contoso.com" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Display name</mat-label>
+      <input matInput formControlName="userDisplayName" />
+    </mat-form-field>
+    <button mat-raised-button color="primary" type="submit" [disabled]="saving()">Grant access</button>
+  </form>
+
+  <table mat-table [dataSource]="assignments()" class="admin-table">
+    <ng-container matColumnDef="applicationName">
+      <th mat-header-cell *matHeaderCellDef>Application</th>
+      <td mat-cell *matCellDef="let a">{{ a.applicationName }}</td>
+    </ng-container>
+    <ng-container matColumnDef="userDisplayName">
+      <th mat-header-cell *matHeaderCellDef>Developer</th>
+      <td mat-cell *matCellDef="let a">{{ a.userDisplayName }}</td>
+    </ng-container>
+    <ng-container matColumnDef="userEmail">
+      <th mat-header-cell *matHeaderCellDef>Email</th>
+      <td mat-cell *matCellDef="let a">{{ a.userEmail }}</td>
+    </ng-container>
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let a" class="actions-cell">
+        <button mat-icon-button color="warn" (click)="delete(a)" aria-label="Revoke access">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns"></tr>
+  </table>
+
+  @if (!loading() && assignments().length === 0) {
+    <p class="empty">No developers have been granted access yet.</p>
+  }
+</div>

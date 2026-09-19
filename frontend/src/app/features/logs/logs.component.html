@@ -1,0 +1,41 @@
+<h1>Application Logs</h1>
+<p class="subtitle">Select an app to tail its live log stream.</p>
+
+@if (loadingApps()) {
+  <mat-spinner diameter="36" />
+} @else {
+  <mat-form-field appearance="outline" class="picker">
+    <mat-label>Application</mat-label>
+    <mat-select [value]="selectedAppId()" (selectionChange)="selectApp($event.value)">
+      @for (app of apps(); track app.id) {
+        <mat-option [value]="app.id">{{ app.name }} ({{ app.environment }})</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  @if (connectionError()) {
+    <p class="error">{{ connectionError() }}</p>
+  }
+
+  @if (selectedAppId()) {
+    <div class="status">
+      @if (streaming()) {
+        <mat-icon class="pulse">fiber_manual_record</mat-icon>
+        <span>Live</span>
+      }
+    </div>
+
+    <div class="log-view" #logView>
+      @for (entry of entries(); track $index) {
+        <div [class]="levelClass(entry.level)">
+          <span class="ts">{{ entry.timestampUtc }}</span>
+          <span class="level">{{ entry.level }}</span>
+          <span class="msg">{{ entry.message }}</span>
+        </div>
+      }
+      @if (entries().length === 0) {
+        <div class="placeholder">Waiting for log output&hellip;</div>
+      }
+    </div>
+  }
+}

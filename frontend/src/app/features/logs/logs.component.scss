@@ -1,0 +1,83 @@
+.subtitle {
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: -8px;
+}
+
+.picker {
+  width: 320px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #2e7d32;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.pulse {
+  font-size: 12px;
+  height: 12px;
+  width: 12px;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.log-view {
+  background: #0d1117;
+  color: #c9d1d9;
+  font-family: 'Cascadia Code', 'Courier New', monospace;
+  font-size: 0.82rem;
+  padding: 12px;
+  border-radius: 6px;
+  height: 60vh;
+  overflow-y: auto;
+}
+
+.log-line {
+  display: flex;
+  gap: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ts {
+  color: #6e7681;
+  flex-shrink: 0;
+}
+
+.level {
+  flex-shrink: 0;
+  width: 60px;
+  font-weight: 600;
+}
+
+.level-error .level {
+  color: #f85149;
+}
+
+.level-warning .level {
+  color: #d29922;
+}
+
+.level-info .level {
+  color: #58a6ff;
+}
+
+.level-debug .level,
+.level-trace .level {
+  color: #8b949e;
+}
+
+.placeholder {
+  color: #6e7681;
+}
+
+.error {
+  color: #c62828;
+}
