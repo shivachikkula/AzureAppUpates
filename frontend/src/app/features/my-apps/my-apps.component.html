@@ -1,0 +1,34 @@
+<h1>My Apps</h1>
+<p class="subtitle">Azure App Services assigned to you.</p>
+
+@if (loading()) {
+  <mat-spinner diameter="36" />
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else if (apps().length === 0) {
+  <p>No applications are currently assigned to you. Ask your manager to grant access.</p>
+} @else {
+  <div class="grid">
+    @for (app of apps(); track app.id) {
+      <mat-card class="app-card">
+        <mat-card-header>
+          <mat-card-title>{{ app.name }}</mat-card-title>
+          <mat-card-subtitle>{{ app.resourceGroup }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <span [class]="environmentClass(app.environment)">{{ app.environment }}</span>
+          <p class="host">
+            <mat-icon inline>link</mat-icon>
+            {{ app.defaultHostName }}
+          </p>
+        </mat-card-content>
+        <mat-card-actions>
+          <a mat-button color="primary" routerLink="/connection-strings" [queryParams]="{ appId: app.id }">
+            Update Connection String
+          </a>
+          <a mat-button routerLink="/logs" [queryParams]="{ appId: app.id }">View Logs</a>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </div>
+}

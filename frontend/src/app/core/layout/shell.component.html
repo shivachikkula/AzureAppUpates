@@ -1,0 +1,37 @@
+<mat-toolbar color="primary" class="toolbar">
+  <span class="brand">Azure Env Manager</span>
+  <span class="spacer"></span>
+  <span class="user-name">{{ auth.displayName }}</span>
+  <button mat-icon-button (click)="auth.logout()" aria-label="Sign out" title="Sign out">
+    <mat-icon>logout</mat-icon>
+  </button>
+</mat-toolbar>
+
+<mat-sidenav-container class="container">
+  <mat-sidenav mode="side" opened class="sidenav">
+    <mat-nav-list>
+      <a mat-list-item routerLink="/my-apps" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>apps</mat-icon>
+        <span matListItemTitle>My Apps</span>
+      </a>
+      <a mat-list-item routerLink="/connection-strings" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>vpn_key</mat-icon>
+        <span matListItemTitle>Connection Strings</span>
+      </a>
+      @if (auth.isManager()) {
+        <a mat-list-item routerLink="/approvals" routerLinkActive="active-link">
+          <mat-icon matListItemIcon>fact_check</mat-icon>
+          <span matListItemTitle>Approvals</span>
+        </a>
+      }
+      <a mat-list-item routerLink="/logs" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>terminal</mat-icon>
+        <span matListItemTitle>Logs</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="content">
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>

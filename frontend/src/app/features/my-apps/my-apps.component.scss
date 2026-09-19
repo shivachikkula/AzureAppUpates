@@ -1,0 +1,51 @@
+.subtitle {
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: -8px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.app-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.host {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.env-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.env-development {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.env-staging {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.env-production {
+  background: #fdecea;
+  color: #c62828;
+}
+
+.error {
+  color: #c62828;
+}

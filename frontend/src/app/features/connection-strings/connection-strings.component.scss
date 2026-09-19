@@ -1,0 +1,44 @@
+.subtitle {
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: -8px;
+  max-width: 640px;
+}
+
+.form-card {
+  max-width: 560px;
+  padding: 8px 8px 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.prod-warning {
+  background: #fff3e0;
+  color: #8a5300;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin: 4px 0 16px;
+  font-size: 0.85rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-spinner {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.result-card {
+  max-width: 560px;
+  margin-top: 16px;
+  padding: 8px 16px;
+}
+
+.result-card.pending {
+  border-left: 4px solid #ef6c00;
+}
