@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AzureEnvManager.Api.Authorization;
 using AzureEnvManager.Api.Data;
 using AzureEnvManager.Api.Extensions;
 using AzureEnvManager.Api.Models.Domain;
@@ -7,7 +8,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AzureEnvManager.Api.Services;
 
-public class ChangeRequestService(AppDbContext db, IAzureAppServiceClient azureClient, ILogger<ChangeRequestService> logger)
+public class ChangeRequestService(
+    AppDbContext db,
+    IAzureAppServiceClient azureClient,
+    ITeamAccessService teamAccessService,
+    ILogger<ChangeRequestService> logger)
     : IChangeRequestService
 {
     public async Task<SaveConnectionStringResultDto> SubmitAsync(
@@ -51,14 +56,19 @@ public class ChangeRequestService(AppDbContext db, IAzureAppServiceClient azureC
             Message: $"'{request.Key}' change for {app.Name} was submitted for manager approval.");
     }
 
-    public async Task<List<ChangeRequestDto>> GetPendingAsync(CancellationToken ct = default)
+    public async Task<List<ChangeRequestDto>> GetPendingAsync(ClaimsPrincipal manager, CancellationToken ct = default)
     {
-        var pending = await db.ChangeRequests
+        var query = db.ChangeRequests
             .Include(c => c.Application)
-            .Where(c => c.Status == ChangeRequestStatus.PendingApproval)
-            .OrderBy(c => c.CreatedUtc)
-            .ToListAsync(ct);
+            .Where(c => c.Status == ChangeRequestStatus.PendingApproval);
 
+        if (!manager.IsInRole(AppRoles.Admin))
+        {
+            var teamIds = await teamAccessService.GetManagedTeamIdsAsync(manager.GetObjectId(), ct);
+            query = query.Where(c => teamIds.Contains(c.Application!.TeamId));
+        }
+
+        var pending = await query.OrderBy(c => c.CreatedUtc).ToListAsync(ct);
         return pending.Select(ChangeRequestDto.FromDomain).ToList();
     }
 
@@ -76,6 +86,7 @@ public class ChangeRequestService(AppDbContext db, IAzureAppServiceClient azureC
     public async Task<ChangeRequestDto> ApproveAsync(Guid changeRequestId, ClaimsPrincipal approver, string? note, CancellationToken ct = default)
     {
         var changeRequest = await LoadPendingAsync(changeRequestId, ct);
+        await EnsureCanDecideAsync(changeRequest, approver, ct);
 
         changeRequest.Status = ChangeRequestStatus.Approved;
         changeRequest.DecidedByObjectId = approver.GetObjectId();
@@ -108,6 +119,7 @@ public class ChangeRequestService(AppDbContext db, IAzureAppServiceClient azureC
     public async Task<ChangeRequestDto> RejectAsync(Guid changeRequestId, ClaimsPrincipal approver, string? note, CancellationToken ct = default)
     {
         var changeRequest = await LoadPendingAsync(changeRequestId, ct);
+        await EnsureCanDecideAsync(changeRequest, approver, ct);
 
         changeRequest.Status = ChangeRequestStatus.Rejected;
         changeRequest.DecidedByObjectId = approver.GetObjectId();
@@ -117,6 +129,25 @@ public class ChangeRequestService(AppDbContext db, IAzureAppServiceClient azureC
 
         await db.SaveChangesAsync(ct);
         return ChangeRequestDto.FromDomain(changeRequest);
+    }
+
+    private async Task EnsureCanDecideAsync(ChangeRequest changeRequest, ClaimsPrincipal approver, CancellationToken ct)
+    {
+        if (approver.IsInRole(AppRoles.Admin))
+        {
+            return;
+        }
+
+        var isTeamManager = await teamAccessService.IsManagerOfTeamAsync(
+            approver.GetObjectId(),
+            changeRequest.Application!.TeamId,
+            ct);
+
+        if (!isTeamManager)
+        {
+            throw new UnauthorizedAccessException(
+                $"You are not a manager for the team that owns {changeRequest.Application!.Name}.");
+        }
     }
 
     private async Task<ChangeRequest> LoadPendingAsync(Guid changeRequestId, CancellationToken ct)

@@ -28,6 +28,12 @@
         <mat-icon matListItemIcon>terminal</mat-icon>
         <span matListItemTitle>Logs</span>
       </a>
+      @if (auth.isAdmin()) {
+        <a mat-list-item routerLink="/admin" routerLinkActive="active-link">
+          <mat-icon matListItemIcon>admin_panel_settings</mat-icon>
+          <span matListItemTitle>Admin</span>
+        </a>
+      }
     </mat-nav-list>
   </mat-sidenav>
 

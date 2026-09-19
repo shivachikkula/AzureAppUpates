@@ -37,6 +37,10 @@ export class AuthService {
     return this.roles().includes('Manager') || this.roles().includes('Admin');
   }
 
+  isAdmin(): boolean {
+    return this.roles().includes('Admin');
+  }
+
   private extractRoles(account: AccountInfo | null): UserRole[] {
     const claims = account?.idTokenClaims as { roles?: UserRole[] } | undefined;
     return claims?.roles ?? [];

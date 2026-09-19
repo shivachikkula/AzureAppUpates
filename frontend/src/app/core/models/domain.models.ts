@@ -51,3 +51,66 @@ export interface LogEntry {
   level: 'Info' | 'Warning' | 'Error' | 'Debug' | 'Trace';
   message: string;
 }
+
+export interface Team {
+  id: string;
+  name: string;
+  applicationCount: number;
+  managerCount: number;
+}
+
+export interface CreateTeam {
+  name: string;
+}
+
+export interface ApplicationAdmin {
+  id: string;
+  name: string;
+  resourceGroup: string;
+  subscriptionId: string;
+  environment: AppEnvironment;
+  defaultHostName: string;
+  teamId: string;
+  teamName: string;
+}
+
+export interface ApplicationUpsert {
+  name: string;
+  resourceGroup: string;
+  subscriptionId: string;
+  environment: AppEnvironment;
+  defaultHostName: string;
+  teamId: string;
+}
+
+export interface AppAssignmentAdmin {
+  id: string;
+  applicationId: string;
+  applicationName: string;
+  userObjectId: string;
+  userEmail: string;
+  userDisplayName: string;
+}
+
+export interface CreateAppAssignment {
+  applicationId: string;
+  userObjectId: string;
+  userEmail: string;
+  userDisplayName: string;
+}
+
+export interface ManagerAssignment {
+  id: string;
+  teamId: string;
+  teamName: string;
+  userObjectId: string;
+  userEmail: string;
+  userDisplayName: string;
+}
+
+export interface CreateManagerAssignment {
+  teamId: string;
+  userObjectId: string;
+  userEmail: string;
+  userDisplayName: string;
+}

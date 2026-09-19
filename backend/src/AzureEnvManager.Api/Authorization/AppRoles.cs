@@ -7,4 +7,5 @@ public static class AppRoles
     public const string Admin = "Admin";
 
     public const string ManagerPolicy = "RequireManager";
+    public const string AdminPolicy = "RequireAdmin";
 }

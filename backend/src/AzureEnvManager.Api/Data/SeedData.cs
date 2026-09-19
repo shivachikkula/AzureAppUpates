@@ -2,7 +2,7 @@ using AzureEnvManager.Api.Models.Domain;
 
 namespace AzureEnvManager.Api.Data;
 
-/// <summary>Local-dev convenience seeding only. In real environments, applications and assignments are managed through the database directly (or a future admin UI), not baked into code.</summary>
+/// <summary>Local-dev convenience seeding only. In real environments, teams, applications and assignments are managed through the Admin UI, not baked into code.</summary>
 public static class SeedData
 {
     public static void EnsureSeeded(AppDbContext db)
@@ -12,6 +12,9 @@ public static class SeedData
             return;
         }
 
+        var ordersTeam = new Team { Id = Guid.NewGuid(), Name = "Orders Platform" };
+        db.Teams.Add(ordersTeam);
+
         var webApp = new AzureApplication
         {
             Id = Guid.NewGuid(),
@@ -20,6 +23,7 @@ public static class SeedData
             SubscriptionId = "00000000-0000-0000-0000-000000000000",
             Environment = AppEnvironment.Development,
             DefaultHostName = "contoso-orders-api.azurewebsites.net",
+            TeamId = ordersTeam.Id,
         };
 
         var stagingApp = new AzureApplication
@@ -30,6 +34,7 @@ public static class SeedData
             SubscriptionId = "00000000-0000-0000-0000-000000000000",
             Environment = AppEnvironment.Staging,
             DefaultHostName = "contoso-orders-api-staging.azurewebsites.net",
+            TeamId = ordersTeam.Id,
         };
 
         var prodApp = new AzureApplication
@@ -40,6 +45,7 @@ public static class SeedData
             SubscriptionId = "00000000-0000-0000-0000-000000000000",
             Environment = AppEnvironment.Production,
             DefaultHostName = "contoso-orders-api-prod.azurewebsites.net",
+            TeamId = ordersTeam.Id,
         };
 
         db.Applications.AddRange(webApp, stagingApp, prodApp);

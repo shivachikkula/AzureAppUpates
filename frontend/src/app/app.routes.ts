@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { MsalGuard } from '@azure/msal-angular';
 import { ShellComponent } from './core/layout/shell.component';
+import { adminGuard } from './core/guards/admin.guard';
 import { managerGuard } from './core/guards/manager.guard';
 
 export const routes: Routes = [
@@ -34,6 +35,12 @@ export const routes: Routes = [
         path: 'logs',
         loadComponent: () => import('./features/logs/logs.component').then((m) => m.LogsComponent),
         title: 'Application Logs',
+      },
+      {
+        path: 'admin',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/admin/admin.component').then((m) => m.AdminComponent),
+        title: 'Admin',
       },
     ],
   },

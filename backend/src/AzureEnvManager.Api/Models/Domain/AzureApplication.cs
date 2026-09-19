@@ -10,5 +10,8 @@ public class AzureApplication
     public AppEnvironment Environment { get; set; }
     public string DefaultHostName { get; set; } = string.Empty;
 
+    public Guid TeamId { get; set; }
+    public Team? Team { get; set; }
+
     public ICollection<AppAssignment> Assignments { get; set; } = new List<AppAssignment>();
 }

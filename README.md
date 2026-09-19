@@ -16,28 +16,36 @@ Services, with a manager-approval gate for production, plus a live log viewer.
   - Development/Staging apps are updated in Azure immediately.
   - Production apps instead create a **pending change request**.
 - **Approvals** (Manager role) — review pending production change requests
-  and approve (applies the change to Azure) or reject them.
+  and approve (applies the change to Azure) or reject them. Scoped per
+  team: a manager only sees/decides requests for teams they're assigned to
+  manage; Admins see and decide everything.
 - **Logs** — a separate page with an app dropdown that live-tails the
   selected App Service's log stream over SignalR.
+- **Admin** (Admin role) — manage teams, the applications each team owns,
+  which developers have access to which app, and which managers approve for
+  which team.
 
 ## Architecture
 
 ```
 frontend/                 Angular app
   src/app/core/            auth (MSAL), guards, HTTP services, layout shell
-  src/app/features/        my-apps, connection-strings, approvals, logs
+  src/app/features/        my-apps, connection-strings, approvals, logs, admin
 
 backend/
   src/AzureEnvManager.Api/
-    Controllers/           Applications, ConnectionStrings, Approvals
+    Controllers/           Applications, ConnectionStrings, Approvals, Admin
     Hubs/LogStreamHub.cs    SignalR hub clients subscribe to for live logs
     Services/
       AzureAppServiceClient    talks to Azure Resource Manager
       AppServiceLogStreamBroker  relays each app's Kudu log stream to its SignalR group
-      ChangeRequestService       apply-now vs. pending-approval workflow
-      AppAccessService           who can see/edit which app
+      ChangeRequestService       apply-now vs. pending-approval workflow, team-scoped decisions
+      AppAccessService           who (developer) can see/edit which app
+      TeamAccessService          who (manager) can decide requests for which team
+      AdminService                CRUD for teams, applications, and both kinds of assignment
     Data/                   EF Core (SQLite) DbContext + local dev seed data
     Models/                 Domain entities + API DTOs
+  tests/AzureEnvManager.Api.Tests/   xUnit tests (EF Core InMemory + mocked Azure client)
 ```
 
 **Identity & access:** sign-in is via Microsoft Entra ID (Azure AD) using
@@ -46,7 +54,23 @@ the API. "Which apps can this developer touch" is modeled with an
 `AppAssignment` table (per user, per app) in the API's own database — this
 is metadata about *who may operate the tool*, separate from the Azure
 resources themselves. A `Manager`/`Admin` Entra ID App Role gates the
-Approvals endpoints.
+Approvals endpoints; the `Admin` role alone gates `/api/admin/*`.
+
+**Teams & per-team approval scoping:** every tracked `AzureApplication`
+belongs to a `Team`. A `ManagerTeamAssignment` row grants a manager
+(identified by Entra object id) the ability to see and decide production
+change requests for one team's apps. `ChangeRequestService.GetPendingAsync`
+filters to the caller's managed teams (via `ITeamAccessService`), and
+`ApproveAsync`/`RejectAsync` re-check team membership before acting —
+a manager who isn't on the owning team gets a 403, not just a hidden list
+item. Anyone with the `Admin` role bypasses team scoping and can see/decide
+every pending request.
+
+**Admin UI:** `/admin` (Admin role only) has four tabs — Teams,
+Applications, Developer Access, and Manager Access — backed by
+`AdminController`/`AdminService`. This replaces hand-editing the database:
+create a team, add an application to it, grant a developer access to an
+app, and grant a manager approval rights over a team, all from the browser.
 
 **Applying changes to Azure:** the API uses `Azure.ResourceManager.AppService`
 with `DefaultAzureCredential`, so in Azure it runs as the API's managed
@@ -56,7 +80,7 @@ falls back to your `az login` session.
 
 **Approval workflow:** `POST /api/connection-strings` either applies the
 change immediately (non-prod) or creates a `ChangeRequest` row with status
-`PendingApproval` (prod). A manager calls
+`PendingApproval` (prod). A manager of the owning team (or an Admin) calls
 `POST /api/approvals/{id}/approve` (which then calls Azure and marks the
 request `Applied` or `Failed`) or `.../reject`.
 
@@ -69,11 +93,11 @@ One stream per app runs while at least one browser is subscribed.
 
 - Node.js 22.12+ and npm (frontend)
 - .NET 8 SDK (backend) — **not installed in this sandbox**, so the backend
-  could not be compiled or run here; review it locally with
-  `dotnet build` before deploying.
+  and its tests could not be compiled or run here; run
+  `dotnet test backend/AzureEnvManager.sln` locally before deploying.
 - An Entra ID (Azure AD) tenant with two app registrations:
   1. **API app** — exposes a scope (e.g. `access_as_user`) and defines the
-     `Developer`, `Manager` (and optionally `Admin`) app roles.
+     `Developer`, `Manager` and `Admin` app roles.
   2. **SPA app** — the Angular app, with a redirect URI for your dev/prod
      hosting and `access_as_user` as an API permission.
 - An Azure subscription with the App Services you want to manage, and a
@@ -104,10 +128,10 @@ Backend — fill in `backend/src/AzureEnvManager.Api/appsettings.json`:
 }
 ```
 
-Applications and per-developer assignments are rows in the `Applications` /
-`Assignments` tables — add your real App Service names, resource groups and
-subscription id there (a small admin UI or seed script is a natural next
-step; for now `Data/SeedData.cs` shows the shape with placeholder apps).
+Sign in as a user with the `Admin` app role and use the **Admin** page to
+create your teams, add your real App Services (with resource group,
+subscription id, and environment), and grant developer/manager access.
+`Data/SeedData.cs` only seeds one example team/app set for local dev.
 
 ## Running locally
 
@@ -115,6 +139,10 @@ step; for now `Data/SeedData.cs` shows the shape with placeholder apps).
 # Backend (https://localhost:5001)
 cd backend/src/AzureEnvManager.Api
 dotnet run
+
+# Backend tests
+cd backend
+dotnet test
 
 # Frontend (http://localhost:4200)
 cd frontend
@@ -124,12 +152,15 @@ npm start
 
 ## Known gaps / next steps
 
-- Applications and assignments are managed directly in the database; there's
-  no admin UI yet for a manager to assign apps to developers.
-- The Manager role is global (any Manager can approve any pending request);
-  scoping approvers to specific resource groups/teams is a reasonable
-  follow-up.
-- No automated tests were added for the backend (none could be run in this
-  sandbox without the .NET SDK); add unit tests for `ChangeRequestService`
-  and an integration test for the approval flow before relying on this in
-  production.
+- Team deletion isn't exposed in the Admin UI (a team with applications
+  can't be deleted anyway, by design — reassign its apps first); this is a
+  reasonable follow-up if teams need to be retired.
+- Entra object ids are entered by hand in the Admin UI's assignment forms;
+  wiring up Microsoft Graph people-search would make that friendlier.
+- Backend tests cover `ChangeRequestService`, `AppAccessService`,
+  `TeamAccessService`, and `AdminService` against an EF Core InMemory
+  database with a mocked Azure client; none could be run in this sandbox
+  without the .NET SDK — run `dotnet test` locally to verify before
+  relying on this in production. There are no controller-level/integration
+  tests yet (e.g. `WebApplicationFactory`), which would be the next layer
+  to add.

@@ -12,12 +12,12 @@ namespace AzureEnvManager.Api.Controllers;
 [Authorize]
 public class ApprovalsController(IChangeRequestService changeRequestService) : ControllerBase
 {
-    /// <summary>Requests awaiting a manager's decision.</summary>
+    /// <summary>Requests awaiting a decision, scoped to the teams the caller manages (Admins see every team).</summary>
     [HttpGet("pending")]
     [Authorize(Policy = AppRoles.ManagerPolicy)]
     public async Task<ActionResult<IEnumerable<ChangeRequestDto>>> GetPending(CancellationToken ct)
     {
-        return Ok(await changeRequestService.GetPendingAsync(ct));
+        return Ok(await changeRequestService.GetPendingAsync(User, ct));
     }
 
     /// <summary>The signed-in developer's own submitted requests and their outcomes.</summary>
@@ -43,6 +43,10 @@ public class ApprovalsController(IChangeRequestService changeRequestService) : C
         {
             return Conflict(new { message = ex.Message });
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
     }
 
     [HttpPost("{id:guid}/reject")]
@@ -60,6 +64,10 @@ public class ApprovalsController(IChangeRequestService changeRequestService) : C
         catch (InvalidOperationException ex)
         {
             return Conflict(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
         }
     }
 }

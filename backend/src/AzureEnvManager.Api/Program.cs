@@ -38,6 +38,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBear
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(AppRoles.ManagerPolicy, policy => policy.RequireRole(AppRoles.Manager, AppRoles.Admin));
+    options.AddPolicy(AppRoles.AdminPolicy, policy => policy.RequireRole(AppRoles.Admin));
 });
 
 builder.Services.AddControllers();
@@ -45,8 +46,10 @@ builder.Services.AddSignalR();
 builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<IAppAccessService, AppAccessService>();
+builder.Services.AddScoped<ITeamAccessService, TeamAccessService>();
 builder.Services.AddScoped<IAzureApplicationLookup, AzureApplicationLookup>();
 builder.Services.AddScoped<IChangeRequestService, ChangeRequestService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddSingleton<IAzureAppServiceClient, AzureAppServiceClient>();
 builder.Services.AddSingleton<ILogStreamBroker, AppServiceLogStreamBroker>();
 

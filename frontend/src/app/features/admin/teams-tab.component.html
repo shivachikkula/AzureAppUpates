@@ -1,0 +1,31 @@
+<div class="tab-body">
+  <form class="inline-form" [formGroup]="form" (ngSubmit)="create()">
+    <mat-form-field appearance="outline">
+      <mat-label>New team name</mat-label>
+      <input matInput formControlName="name" placeholder="e.g. Orders Platform" />
+    </mat-form-field>
+    <button mat-raised-button color="primary" type="submit" [disabled]="saving()">Add team</button>
+  </form>
+
+  <table mat-table [dataSource]="teams()" class="admin-table">
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Team</th>
+      <td mat-cell *matCellDef="let team">{{ team.name }}</td>
+    </ng-container>
+    <ng-container matColumnDef="applicationCount">
+      <th mat-header-cell *matHeaderCellDef>Applications</th>
+      <td mat-cell *matCellDef="let team">{{ team.applicationCount }}</td>
+    </ng-container>
+    <ng-container matColumnDef="managerCount">
+      <th mat-header-cell *matHeaderCellDef>Managers</th>
+      <td mat-cell *matCellDef="let team">{{ team.managerCount }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns"></tr>
+    <tr mat-row *matRowDef="let row; columns: columns"></tr>
+  </table>
+
+  @if (!loading() && teams().length === 0) {
+    <p class="empty">No teams yet. Add one above.</p>
+  }
+</div>

@@ -9,7 +9,8 @@ public interface IChangeRequestService
     /// <summary>Applies the change immediately for non-production apps, or files a pending approval request for production apps.</summary>
     Task<SaveConnectionStringResultDto> SubmitAsync(AzureApplication app, ConnectionStringUpdateRequestDto request, ClaimsPrincipal requester, CancellationToken ct = default);
 
-    Task<List<ChangeRequestDto>> GetPendingAsync(CancellationToken ct = default);
+    /// <summary>Requests awaiting a decision, scoped to the teams the caller manages (or all, for an Admin).</summary>
+    Task<List<ChangeRequestDto>> GetPendingAsync(ClaimsPrincipal manager, CancellationToken ct = default);
 
     Task<List<ChangeRequestDto>> GetMineAsync(string userObjectId, CancellationToken ct = default);
 
